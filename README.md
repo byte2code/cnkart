@@ -1,10 +1,10 @@
 # CNKart API
 
-Spring Boot REST API for managing catalog items and item details with JPA, MySQL persistence, and layered controller-service-repository design.
+Spring Boot REST API for managing catalog items and item details with JPA, MySQL persistence, query-based filtering, and layered controller-service-repository design.
 
 ## Overview
 
-This project demonstrates a compact Spring Boot API for managing product-like catalog items. It models each item with linked detail data such as brand, price, and category, making it a useful learning project for understanding one-to-one JPA relationships and CRUD-style REST workflows backed by MySQL.
+This project demonstrates a compact Spring Boot API for managing product-like catalog items. It models each item with linked detail data such as brand, price, and category, and extends the original CRUD-style workflow with named-query and native-query based filtering endpoints for stronger catalog-search learning value.
 
 ## Concepts and Features Covered
 
@@ -18,6 +18,9 @@ This project demonstrates a compact Spring Boot API for managing product-like ca
 - `PUT` endpoint for updating an item
 - `DELETE` endpoint for deleting an item by ID
 - `DELETE` endpoint for deleting item details by ID
+- Native query based item search by description prefix
+- Derived query for item details above a given price
+- Named query for item details by category ordered by price
 
 ## Tech Stack
 
@@ -40,17 +43,17 @@ cnkart/
 ├── mvnw.cmd
 └── src/
     ├── main/
-    │   ├── java/com/cn/cnkart/
+    │   ├── java/com/cn/ecommerce/
     │   │   ├── controller/
-    │   │   ├── dal/
+    │   │   ├── dao/
     │   │   ├── entity/
     │   │   ├── service/
-    │   │   └── CnkartApplication.java
+    │   │   └── EcommerceApplication.java
     │   └── resources/
     │       └── application.yml
     └── test/
-        └── java/com/cn/cnkart/
-            └── CnkartApplicationTests.java
+        └── java/com/cn/ecommerce/
+            └── EcommerceApplicationTests.java
 ```
 
 ## How to Run
@@ -63,12 +66,15 @@ cnkart/
 
 Available endpoints:
 
-- `GET /item/id/{id}`
-- `GET /item/all`
-- `POST /item/save`
-- `PUT /item/update`
-- `DELETE /item/delete/id/{id}`
-- `DELETE /details/id/{id}`
+- `GET /api/item/{id}`
+- `GET /api/item`
+- `POST /api/item/save`
+- `PUT /api/item/update`
+- `DELETE /api/item/{id}`
+- `GET /api/item/desc/{desc}`
+- `DELETE /api/details/item/{id}`
+- `GET /api/details/item/price/{price}`
+- `GET /api/details/item/category/{category}`
 
 Example request body:
 
@@ -88,10 +94,11 @@ Example request body:
 
 - Demonstrates how to model one-to-one entity relationships with JPA
 - Shows a clean separation between controllers, services, and repository access
-- Keeps the API surface compact while still covering create, read, update, and delete flows
+- Adds native-query, named-query, and derived-query examples in one compact project
+- Keeps the API surface compact while still covering create, read, update, delete, and filter flows
 - Works well as a starter project for relational CRUD APIs with Spring Boot
 
 ## GitHub Metadata
 
-- Suggested repository description: `Spring Boot REST API for managing catalog items and item details with JPA, MySQL persistence, and layered service design.`
-- Suggested topics: `java`, `spring-boot`, `spring-data-jpa`, `mysql`, `rest-api`, `crud-api`, `ecommerce`, `catalog-management`, `maven`, `learning-project`, `portfolio-project`
+- Suggested repository description: `Spring Boot REST API for managing catalog items and item details with JPA, MySQL persistence, plus native-query and named-query catalog filtering.`
+- Suggested topics: `java`, `spring-boot`, `spring-data-jpa`, `mysql`, `rest-api`, `crud-api`, `ecommerce`, `catalog-management`, `native-query`, `named-query`, `maven`, `learning-project`, `portfolio-project`
