@@ -1,104 +1,62 @@
-# CNKart API
+# CNKart Microservices
 
-Spring Boot REST API for managing catalog items and item details with JPA, MySQL persistence, query-based filtering, and layered controller-service-repository design.
+Spring Boot microservice suite for a simple e-commerce workflow. The repository now contains separate services for catalog items, inventory checks, order placement, and service discovery.
 
 ## Overview
 
-This project demonstrates a compact Spring Boot API for managing product-like catalog items. It models each item with linked detail data such as brand, price, and category, and extends the original CRUD-style workflow with named-query and native-query based filtering endpoints for stronger catalog-search learning value.
+This version evolves the original CNKart application from a single monolithic REST API into a multi-service architecture. Each service has its own Spring Boot project, configuration, and lifecycle, which makes the repo a better fit for distributed-systems learning and demo use.
 
-## Concepts and Features Covered
+## Services
 
-- Spring Boot REST API setup
-- Spring Data JPA repository pattern
-- MySQL-backed persistence
-- One-to-one relationship between `Item` and `ItemDetails`
-- `GET` endpoint for retrieving an item by ID
-- `GET` endpoint for listing all items
-- `POST` endpoint for saving an item with details
-- `PUT` endpoint for updating an item
-- `DELETE` endpoint for deleting an item by ID
-- `DELETE` endpoint for deleting item details by ID
-- Native query based item search by description prefix
-- Derived query for item details above a given price
-- Named query for item details by category ordered by price
+- `discovery-server` on port `8761`
+- `item` on port `8081`
+- `order` on port `8082`
+- `inventory` on port `8083`
 
-## Tech Stack
+## What Each Service Does
 
-- Java 8
-- Spring Boot 2.7
-- Spring Web
-- Spring Data JPA
-- MySQL
-- Maven
-- JUnit 5
+- `item` exposes item creation and item listing APIs.
+- `inventory` checks stock availability for a requested SKU and quantity.
+- `order` places orders and coordinates inventory verification with a Hystrix fallback.
+- `discovery-server` acts as the Eureka registry for the service suite.
 
-## Project Structure
+## Shared Concepts
+
+- Spring Boot REST services
+- Spring Data JPA persistence
+- MySQL-backed runtime configuration
+- Eureka client/server registration
+- OpenFeign-based service-to-service calls
+- Hystrix fallback support for order placement
+- Separate `application.yml` / `application.properties` files per service
+
+## Repository Layout
 
 ```text
 cnkart/
-├── CHANGELOG.md
+├── discovery-server/
+├── item/
+├── inventory/
+├── order/
 ├── README.md
-├── pom.xml
-├── mvnw
-├── mvnw.cmd
-└── src/
-    ├── main/
-    │   ├── java/com/cn/ecommerce/
-    │   │   ├── controller/
-    │   │   ├── dao/
-    │   │   ├── entity/
-    │   │   ├── service/
-    │   │   └── EcommerceApplication.java
-    │   └── resources/
-    │       └── application.yml
-    └── test/
-        └── java/com/cn/ecommerce/
-            └── EcommerceApplicationTests.java
+├── CHANGELOG.md
+└── .gitignore
 ```
 
-## How to Run
+## Running the Suite
 
-1. Open a terminal in the project root.
-2. Update the MySQL connection values in `src/main/resources/application.yml` if needed.
-3. Run `mvn test`.
-4. Run `mvn spring-boot:run`.
-5. Use the API under `http://localhost:8080`.
+1. Start `discovery-server`.
+2. Start `inventory`.
+3. Start `item`.
+4. Start `order`.
+5. Call the service endpoints through the individual service ports.
 
-Available endpoints:
+## Notes
 
-- `GET /api/item/{id}`
-- `GET /api/item`
-- `POST /api/item/save`
-- `PUT /api/item/update`
-- `DELETE /api/item/{id}`
-- `GET /api/item/desc/{desc}`
-- `DELETE /api/details/item/{id}`
-- `GET /api/details/item/price/{price}`
-- `GET /api/details/item/category/{category}`
+- The legacy monolithic CNKart codebase has been replaced by the microservice suite in this version.
+- Build artifacts and IDE-specific files are intentionally excluded from the repository.
+- Configuration files are retained in each service folder for local setup.
 
-Example request body:
+## Suggested Topics
 
-```json
-{
-  "name": "Wireless Mouse",
-  "description": "Compact Bluetooth mouse",
-  "itemDetails": {
-    "brand": "LogiTech",
-    "price": 1299.0,
-    "category": "Accessories"
-  }
-}
-```
-
-## Learning Highlights
-
-- Demonstrates how to model one-to-one entity relationships with JPA
-- Shows a clean separation between controllers, services, and repository access
-- Adds native-query, named-query, and derived-query examples in one compact project
-- Keeps the API surface compact while still covering create, read, update, delete, and filter flows
-- Works well as a starter project for relational CRUD APIs with Spring Boot
-
-## GitHub Metadata
-
-- Suggested repository description: `Spring Boot REST API for managing catalog items and item details with JPA, MySQL persistence, plus native-query and named-query catalog filtering.`
-- Suggested topics: `java`, `spring-boot`, `spring-data-jpa`, `mysql`, `rest-api`, `crud-api`, `ecommerce`, `catalog-management`, `native-query`, `named-query`, `maven`, `learning-project`, `portfolio-project`
+`java`, `spring-boot`, `spring-data-jpa`, `spring-cloud`, `eureka`, `openfeign`, `hystrix`, `mysql`, `microservices`, `ecommerce`, `rest-api`
