@@ -2,6 +2,17 @@
 
 All notable changes to this project are documented in this file.
 
+## [v4.0.0] - 2026-05-20
+
+Expanded the order service from a simple stock-check-and-save flow into a traceable order lifecycle workflow.
+
+- Added order lifecycle states: `PENDING`, `CONFIRMED`, `REJECTED`, and `FAILED`.
+- Added generated order references using the `ORD-` prefix for easier order tracing.
+- Added idempotency key support so repeated checkout retries can return the existing order status instead of creating duplicate orders.
+- Changed the order API response from plain text to a structured response containing order reference, idempotency key, status, and message.
+- Persisted rejected and failed order attempts so the order service records more than only successful orders.
+- Added focused order service tests for confirmed, rejected, failed, and duplicate idempotency-key scenarios.
+
 ## [v3.0.0] - 2026-05-11
 
 Converted the CNKart repo into a microservice suite with discovery, item, inventory, and order services.

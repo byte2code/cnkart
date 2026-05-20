@@ -7,7 +7,6 @@ import lombok.Setter;
 
 import javax.persistence.*;
 import java.math.BigDecimal;
-import java.util.List;
 
 @Entity
 @Table(name = "orders")
@@ -20,6 +19,12 @@ public class Order {
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
     private String orderNumber;
+    @Column(unique = true)
+    private String orderReference;
+    @Column(unique = true)
+    private String idempotencyKey;
+    @Enumerated(EnumType.STRING)
+    private OrderStatus status;
     private String skuCode;
     private BigDecimal price;
     private Integer quantity;

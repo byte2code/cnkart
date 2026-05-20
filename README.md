@@ -1,6 +1,6 @@
 # CNKart Microservices
 
-Spring Boot microservice suite for a simple e-commerce workflow with separate services for catalog items, inventory checks, order placement, and service discovery.
+Spring Boot microservice suite for a simple e-commerce workflow with separate services for catalog items, inventory checks, order placement, order lifecycle tracking, and service discovery.
 
 ## Overview
 
@@ -10,7 +10,7 @@ The services work together like this:
 
 - `item` manages catalog items.
 - `inventory` checks stock availability for a requested SKU and quantity.
-- `order` places orders after checking inventory and uses a fallback when inventory is unavailable.
+- `order` creates traceable order references, tracks order status, handles duplicate order submissions with an idempotency key, and checks inventory before confirming or rejecting the order.
 - `discovery-server` acts as the Eureka registry for the service suite.
 
 ## Concepts / Features Covered
@@ -21,6 +21,9 @@ The services work together like this:
 - Eureka service discovery
 - OpenFeign-based service-to-service communication
 - Hystrix fallback handling in the order flow
+- Order lifecycle states: `PENDING`, `CONFIRMED`, `REJECTED`, and `FAILED`
+- Idempotency key handling to avoid duplicate order creation on retries
+- Generated order references for easier order tracing
 - Service-local configuration files for each module
 - Independent service startup and runtime lifecycle
 
@@ -43,7 +46,7 @@ The services work together like this:
 | --- | --- | --- |
 | `discovery-server` | `8761` | Eureka registry for service registration |
 | `item` | `8081` | Create and list catalog items |
-| `order` | `8082` | Place orders after stock validation |
+| `order` | `8082` | Create idempotent orders and track status after inventory validation |
 | `inventory` | `8083` | Check stock for a SKU and quantity |
 
 ## Example API Calls
@@ -105,21 +108,54 @@ curl -X POST http://localhost:8082/api/order \
   -d '{
     "skuCode": "1",
     "price": 799.00,
-    "quantity": 2
+    "quantity": 2,
+    "idempotencyKey": "checkout-1-user-42"
   }'
 ```
 
 Success response:
 
-```text
-Order Placed
+```json
+{
+  "orderReference": "ORD-6d6f7b78-1a7d-42de-a2df-4ccdc7f72cc5",
+  "idempotencyKey": "checkout-1-user-42",
+  "status": "CONFIRMED",
+  "message": "Order confirmed"
+}
 ```
 
-Fallback response:
+Rejected response:
 
-```text
-Item is not in stock, please try again later
+```json
+{
+  "orderReference": "ORD-6d6f7b78-1a7d-42de-a2df-4ccdc7f72cc5",
+  "idempotencyKey": "checkout-1-user-42",
+  "status": "REJECTED",
+  "message": "Order rejected because item is not in stock"
+}
 ```
+
+Duplicate request response:
+
+```json
+{
+  "orderReference": "ORD-6d6f7b78-1a7d-42de-a2df-4ccdc7f72cc5",
+  "idempotencyKey": "checkout-1-user-42",
+  "status": "CONFIRMED",
+  "message": "Duplicate order request detected, returning existing order status"
+}
+```
+
+Use the same `idempotencyKey` when retrying the same checkout request. The order service returns the existing order instead of creating a duplicate record.
+
+## Order Lifecycle
+
+| Status | Meaning |
+| --- | --- |
+| `PENDING` | Order command has been accepted and stored before inventory validation |
+| `CONFIRMED` | Inventory confirmed stock availability |
+| `REJECTED` | Inventory responded but stock was unavailable |
+| `FAILED` | Inventory validation failed because of an unavailable dependency or invalid order data |
 
 ## Project Structure
 
@@ -159,7 +195,11 @@ flowchart LR
     Discovery --- Inventory
     Discovery --- Order
 
-    Order --> Inventory
+    Order --> Pending["PENDING order with idempotency key"]
+    Pending --> Inventory
+    Inventory --> Confirmed["CONFIRMED"]
+    Inventory --> Rejected["REJECTED"]
+    Pending --> Failed["FAILED"]
     Item --> ItemDB[(item_service DB)]
     Inventory --> InvDB[(inventory_service DB)]
     Order --> OrderDB[(order_service DB)]
@@ -171,6 +211,9 @@ flowchart LR
 - Using Eureka to register and discover services
 - Calling one service from another with OpenFeign
 - Keeping order placement resilient with Hystrix fallback
+- Modeling order state transitions instead of only saving successful orders
+- Using idempotency keys to make retry behavior safe for checkout APIs
+- Returning traceable order references to support debugging and future event workflows
 - Separating service data, config, and startup responsibility
 - Practicing REST, JPA, and distributed-system wiring in one repo
 
