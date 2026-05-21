@@ -5,6 +5,8 @@ import java.util.UUID;
 
 import org.springframework.stereotype.Service;
 
+import com.cnkart.order.dto.InventoryReservationRequest;
+import com.cnkart.order.dto.InventoryReservationResponse;
 import com.cnkart.order.dto.OrderRequest;
 import com.cnkart.order.dto.OrderResponse;
 import com.cnkart.order.feign.InventoryService;
@@ -44,21 +46,23 @@ public class OrderService {
         orderRepository.save(order);
 
         try {
-            boolean isInStock = inventoryService.isInStock(Long.parseLong(orderRequest.getSkuCode()), orderRequest.getQuantity());
+            InventoryReservationResponse reservationResponse = inventoryService.reserveStock(
+                    new InventoryReservationRequest(orderReference, orderRequest.getSkuCode(), orderRequest.getQuantity())
+            );
 
-            if (isInStock) {
+            if (reservationResponse.isReserved()) {
                 order.setStatus(OrderStatus.CONFIRMED);
                 orderRepository.save(order);
-                return toResponse(order, "Order confirmed");
+                return toResponse(order, "Order confirmed after inventory reservation");
             }
 
             order.setStatus(OrderStatus.REJECTED);
             orderRepository.save(order);
-            return toResponse(order, "Order rejected because item is not in stock");
+            return toResponse(order, reservationResponse.getMessage());
         } catch (RuntimeException exception) {
             order.setStatus(OrderStatus.FAILED);
             orderRepository.save(order);
-            return toResponse(order, "Order failed while validating inventory");
+            return toResponse(order, "Order failed while reserving inventory");
         }
 
 

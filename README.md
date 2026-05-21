@@ -1,6 +1,6 @@
 # CNKart Microservices
 
-Spring Boot microservice suite for a simple e-commerce workflow with separate services for catalog items, inventory checks, order placement, order lifecycle tracking, and service discovery.
+Spring Boot microservice suite for a simple e-commerce workflow with separate services for catalog items, inventory reservation, order placement, order lifecycle tracking, and service discovery.
 
 ## Overview
 
@@ -9,8 +9,8 @@ CNKart started as a monolithic REST API and is now organized as a small microser
 The services work together like this:
 
 - `item` manages catalog items.
-- `inventory` checks stock availability for a requested SKU and quantity.
-- `order` creates traceable order references, tracks order status, handles duplicate order submissions with an idempotency key, and checks inventory before confirming or rejecting the order.
+- `inventory` checks stock availability and reserves stock for an order before confirmation.
+- `order` creates traceable order references, tracks order status, handles duplicate order submissions with an idempotency key, and confirms orders only after inventory reservation succeeds.
 - `discovery-server` acts as the Eureka registry for the service suite.
 
 ## Concepts / Features Covered
@@ -23,6 +23,8 @@ The services work together like this:
 - Hystrix fallback handling in the order flow
 - Order lifecycle states: `PENDING`, `CONFIRMED`, `REJECTED`, and `FAILED`
 - Idempotency key handling to avoid duplicate order creation on retries
+- Inventory reservation before order confirmation
+- Pessimistic locking during stock reservation to reduce overselling risk
 - Generated order references for easier order tracing
 - Service-local configuration files for each module
 - Independent service startup and runtime lifecycle
@@ -46,8 +48,8 @@ The services work together like this:
 | --- | --- | --- |
 | `discovery-server` | `8761` | Eureka registry for service registration |
 | `item` | `8081` | Create and list catalog items |
-| `order` | `8082` | Create idempotent orders and track status after inventory validation |
-| `inventory` | `8083` | Check stock for a SKU and quantity |
+| `order` | `8082` | Create idempotent orders and track status after inventory reservation |
+| `inventory` | `8083` | Check stock and reserve available quantity for orders |
 
 ## Example API Calls
 
@@ -100,6 +102,31 @@ Sample response:
 true
 ```
 
+### Reserve inventory
+
+```bash
+curl -X POST http://localhost:8083/api/inventory/reservations \
+  -H "Content-Type: application/json" \
+  -d '{
+    "orderReference": "ORD-6d6f7b78-1a7d-42de-a2df-4ccdc7f72cc5",
+    "skuCode": "1",
+    "quantity": 2
+  }'
+```
+
+Sample response:
+
+```json
+{
+  "orderReference": "ORD-6d6f7b78-1a7d-42de-a2df-4ccdc7f72cc5",
+  "skuCode": "1",
+  "requestedQuantity": 2,
+  "availableQuantity": 8,
+  "reserved": true,
+  "message": "Inventory reserved successfully"
+}
+```
+
 ### Place an order
 
 ```bash
@@ -120,7 +147,7 @@ Success response:
   "orderReference": "ORD-6d6f7b78-1a7d-42de-a2df-4ccdc7f72cc5",
   "idempotencyKey": "checkout-1-user-42",
   "status": "CONFIRMED",
-  "message": "Order confirmed"
+  "message": "Order confirmed after inventory reservation"
 }
 ```
 
@@ -131,7 +158,7 @@ Rejected response:
   "orderReference": "ORD-6d6f7b78-1a7d-42de-a2df-4ccdc7f72cc5",
   "idempotencyKey": "checkout-1-user-42",
   "status": "REJECTED",
-  "message": "Order rejected because item is not in stock"
+  "message": "Insufficient stock available for reservation"
 }
 ```
 
@@ -153,9 +180,9 @@ Use the same `idempotencyKey` when retrying the same checkout request. The order
 | Status | Meaning |
 | --- | --- |
 | `PENDING` | Order command has been accepted and stored before inventory validation |
-| `CONFIRMED` | Inventory confirmed stock availability |
-| `REJECTED` | Inventory responded but stock was unavailable |
-| `FAILED` | Inventory validation failed because of an unavailable dependency or invalid order data |
+| `CONFIRMED` | Inventory reservation succeeded and stock was deducted |
+| `REJECTED` | Inventory reservation was declined because stock was unavailable or invalid |
+| `FAILED` | Inventory reservation failed because of an unavailable dependency or invalid order data |
 
 ## Project Structure
 
@@ -196,9 +223,10 @@ flowchart LR
     Discovery --- Order
 
     Order --> Pending["PENDING order with idempotency key"]
-    Pending --> Inventory
-    Inventory --> Confirmed["CONFIRMED"]
-    Inventory --> Rejected["REJECTED"]
+    Pending --> Reservation["POST /api/inventory/reservations"]
+    Reservation --> Inventory
+    Inventory --> Confirmed["CONFIRMED after stock deduction"]
+    Inventory --> Rejected["REJECTED without stock deduction"]
     Pending --> Failed["FAILED"]
     Item --> ItemDB[(item_service DB)]
     Inventory --> InvDB[(inventory_service DB)]
@@ -213,6 +241,8 @@ flowchart LR
 - Keeping order placement resilient with Hystrix fallback
 - Modeling order state transitions instead of only saving successful orders
 - Using idempotency keys to make retry behavior safe for checkout APIs
+- Reserving inventory before confirmation instead of only checking stock availability
+- Applying pessimistic locking during reservation to protect stock updates
 - Returning traceable order references to support debugging and future event workflows
 - Separating service data, config, and startup responsibility
 - Practicing REST, JPA, and distributed-system wiring in one repo

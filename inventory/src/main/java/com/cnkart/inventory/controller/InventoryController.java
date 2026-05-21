@@ -1,5 +1,7 @@
 package com.cnkart.inventory.controller;
 
+import com.cnkart.inventory.dto.InventoryReservationRequest;
+import com.cnkart.inventory.dto.InventoryReservationResponse;
 import com.cnkart.inventory.service.InventoryService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -20,5 +22,11 @@ public class InventoryController {
         log.info("Received inventory check request for skuCode: {}", skuCode);
         return inventoryService.isInStock(skuCode,qty);
     }
-}
 
+    @PostMapping("/reservations")
+    @ResponseStatus(HttpStatus.CREATED)
+    public InventoryReservationResponse reserveStock(@RequestBody InventoryReservationRequest request) {
+        log.info("Received inventory reservation request for orderReference: {}", request.getOrderReference());
+        return inventoryService.reserveStock(request);
+    }
+}

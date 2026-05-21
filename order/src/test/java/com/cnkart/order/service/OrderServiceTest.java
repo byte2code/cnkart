@@ -1,5 +1,7 @@
 package com.cnkart.order.service;
 
+import com.cnkart.order.dto.InventoryReservationRequest;
+import com.cnkart.order.dto.InventoryReservationResponse;
 import com.cnkart.order.dto.OrderRequest;
 import com.cnkart.order.dto.OrderResponse;
 import com.cnkart.order.feign.InventoryService;
@@ -16,6 +18,7 @@ import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -36,38 +39,45 @@ class OrderServiceTest {
     void placeOrderConfirmsOrderWhenInventoryIsAvailable() {
         OrderRequest request = createRequest("order-key-1");
         when(orderRepository.findByIdempotencyKey("order-key-1")).thenReturn(Optional.empty());
-        when(inventoryService.isInStock(1L, 2)).thenReturn(true);
+        when(inventoryService.reserveStock(any(InventoryReservationRequest.class)))
+                .thenReturn(new InventoryReservationResponse("ORD-test", "1", 2, 8, true, "Inventory reserved successfully"));
 
         OrderResponse response = orderService.placeOrder(request);
 
         assertThat(response.getOrderReference()).startsWith("ORD-");
         assertThat(response.getIdempotencyKey()).isEqualTo("order-key-1");
         assertThat(response.getStatus()).isEqualTo(OrderStatus.CONFIRMED);
-        assertThat(response.getMessage()).isEqualTo("Order confirmed");
+        assertThat(response.getMessage()).isEqualTo("Order confirmed after inventory reservation");
+        verify(inventoryService).reserveStock(argThat(reservationRequest ->
+                reservationRequest.getOrderReference().startsWith("ORD-")
+                        && reservationRequest.getSkuCode().equals("1")
+                        && reservationRequest.getQuantity().equals(2)
+        ));
     }
 
     @Test
-    void placeOrderRejectsOrderWhenInventoryIsUnavailable() {
+    void placeOrderRejectsOrderWhenInventoryReservationIsDeclined() {
         OrderRequest request = createRequest("order-key-2");
         when(orderRepository.findByIdempotencyKey("order-key-2")).thenReturn(Optional.empty());
-        when(inventoryService.isInStock(1L, 2)).thenReturn(false);
+        when(inventoryService.reserveStock(any(InventoryReservationRequest.class)))
+                .thenReturn(new InventoryReservationResponse("ORD-test", "1", 2, 1, false, "Insufficient stock available for reservation"));
 
         OrderResponse response = orderService.placeOrder(request);
 
         assertThat(response.getStatus()).isEqualTo(OrderStatus.REJECTED);
-        assertThat(response.getMessage()).isEqualTo("Order rejected because item is not in stock");
+        assertThat(response.getMessage()).isEqualTo("Insufficient stock available for reservation");
     }
 
     @Test
-    void placeOrderFailsOrderWhenInventoryCallBreaks() {
+    void placeOrderFailsOrderWhenInventoryReservationCallBreaks() {
         OrderRequest request = createRequest("order-key-3");
         when(orderRepository.findByIdempotencyKey("order-key-3")).thenReturn(Optional.empty());
-        when(inventoryService.isInStock(1L, 2)).thenThrow(new RuntimeException("inventory unavailable"));
+        when(inventoryService.reserveStock(any(InventoryReservationRequest.class))).thenThrow(new RuntimeException("inventory unavailable"));
 
         OrderResponse response = orderService.placeOrder(request);
 
         assertThat(response.getStatus()).isEqualTo(OrderStatus.FAILED);
-        assertThat(response.getMessage()).isEqualTo("Order failed while validating inventory");
+        assertThat(response.getMessage()).isEqualTo("Order failed while reserving inventory");
     }
 
     @Test
@@ -83,7 +93,7 @@ class OrderServiceTest {
         assertThat(response.getOrderReference()).isEqualTo("ORD-existing");
         assertThat(response.getStatus()).isEqualTo(OrderStatus.CONFIRMED);
         assertThat(response.getMessage()).isEqualTo("Duplicate order request detected, returning existing order status");
-        verify(inventoryService, never()).isInStock(any(Long.class), any(Integer.class));
+        verify(inventoryService, never()).reserveStock(any(InventoryReservationRequest.class));
     }
 
     private OrderRequest createRequest(String idempotencyKey) {

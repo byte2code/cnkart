@@ -2,6 +2,18 @@
 
 All notable changes to this project are documented in this file.
 
+## [v5.0.0] - 2026-05-21
+
+Changed the order flow from a simple inventory check into an inventory reservation workflow.
+
+- Added `POST /api/inventory/reservations` to reserve stock for a specific order reference.
+- Added inventory reservation request and response DTOs in the inventory and order services.
+- Updated order placement so orders are confirmed only after stock is successfully reserved.
+- Added pessimistic locking while loading inventory rows for reservation to reduce overselling risk during concurrent checkout requests.
+- Preserved the existing stock-check endpoint for read-only availability checks.
+- Added focused inventory service tests for successful reservation, insufficient stock, missing SKU, and invalid quantity scenarios.
+- Updated order service tests to validate reservation-based confirmation, rejection, failure, and idempotency behavior.
+
 ## [v4.0.0] - 2026-05-20
 
 Expanded the order service from a simple stock-check-and-save flow into a traceable order lifecycle workflow.
