@@ -9,6 +9,7 @@ import com.cnkart.order.dto.InventoryReservationRequest;
 import com.cnkart.order.dto.InventoryReservationResponse;
 import com.cnkart.order.dto.OrderRequest;
 import com.cnkart.order.dto.OrderResponse;
+import com.cnkart.order.event.OrderEventPublisher;
 import com.cnkart.order.feign.InventoryService;
 import com.cnkart.order.model.Order;
 import com.cnkart.order.model.OrderStatus;
@@ -19,10 +20,12 @@ import com.cnkart.order.repository.OrderRepository;
 public class OrderService {
 
     private final OrderRepository orderRepository;
+    private final OrderEventPublisher orderEventPublisher;
     private final InventoryService inventoryService;
     
-    public OrderService(OrderRepository orderRepository, InventoryService inventoryService) {
+    public OrderService(OrderRepository orderRepository, OrderEventPublisher orderEventPublisher, InventoryService inventoryService) {
         this.orderRepository = orderRepository;
+        this.orderEventPublisher = orderEventPublisher;
         this.inventoryService = inventoryService;
     }
 
@@ -44,6 +47,7 @@ public class OrderService {
         order.setQuantity(orderRequest.getQuantity());
         order.setSkuCode(orderRequest.getSkuCode());
         orderRepository.save(order);
+        orderEventPublisher.publishOrderCreated(order);
 
         try {
             InventoryReservationResponse reservationResponse = inventoryService.reserveStock(
@@ -53,6 +57,7 @@ public class OrderService {
             if (reservationResponse.isReserved()) {
                 order.setStatus(OrderStatus.CONFIRMED);
                 orderRepository.save(order);
+                orderEventPublisher.publishOrderConfirmed(order);
                 return toResponse(order, "Order confirmed after inventory reservation");
             }
 

@@ -2,6 +2,7 @@ package com.cnkart.inventory.service;
 
 import com.cnkart.inventory.dto.InventoryReservationRequest;
 import com.cnkart.inventory.dto.InventoryReservationResponse;
+import com.cnkart.inventory.event.InventoryEventPublisher;
 import com.cnkart.inventory.model.Inventory;
 import com.cnkart.inventory.repository.InventoryRepository;
 import org.junit.jupiter.api.Test;
@@ -23,6 +24,9 @@ class InventoryServiceTest {
     @Mock
     private InventoryRepository inventoryRepository;
 
+    @Mock
+    private InventoryEventPublisher inventoryEventPublisher;
+
     @InjectMocks
     private InventoryService inventoryService;
 
@@ -40,6 +44,7 @@ class InventoryServiceTest {
         assertThat(response.getMessage()).isEqualTo("Inventory reserved successfully");
         assertThat(inventory.getQuantity()).isEqualTo(8);
         verify(inventoryRepository).save(inventory);
+        verify(inventoryEventPublisher).publishInventoryReserved(org.mockito.ArgumentMatchers.any(InventoryReservationRequest.class), org.mockito.ArgumentMatchers.any(InventoryReservationResponse.class));
     }
 
     @Test
@@ -56,6 +61,7 @@ class InventoryServiceTest {
         assertThat(response.getMessage()).isEqualTo("Insufficient stock available for reservation");
         assertThat(inventory.getQuantity()).isEqualTo(1);
         verify(inventoryRepository, never()).save(inventory);
+        verify(inventoryEventPublisher).publishInventoryRejected(org.mockito.ArgumentMatchers.any(InventoryReservationRequest.class), org.mockito.ArgumentMatchers.any(InventoryReservationResponse.class));
     }
 
     @Test
@@ -68,6 +74,7 @@ class InventoryServiceTest {
         assertThat(response.getAvailableQuantity()).isZero();
         assertThat(response.getMessage()).isEqualTo("Inventory record not found for SKU");
         verify(inventoryRepository, never()).save(org.mockito.ArgumentMatchers.any(Inventory.class));
+        verify(inventoryEventPublisher).publishInventoryRejected(org.mockito.ArgumentMatchers.any(InventoryReservationRequest.class), org.mockito.ArgumentMatchers.any(InventoryReservationResponse.class));
     }
 
     @Test
@@ -77,6 +84,7 @@ class InventoryServiceTest {
         assertThat(response.isReserved()).isFalse();
         assertThat(response.getMessage()).isEqualTo("Reservation quantity must be greater than zero");
         verify(inventoryRepository, never()).findBySkuCodeForUpdate("1");
+        verify(inventoryEventPublisher).publishInventoryRejected(org.mockito.ArgumentMatchers.any(InventoryReservationRequest.class), org.mockito.ArgumentMatchers.any(InventoryReservationResponse.class));
     }
 
     private InventoryReservationRequest createRequest(Integer quantity) {

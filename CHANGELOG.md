@@ -2,6 +2,17 @@
 
 All notable changes to this project are documented in this file.
 
+## [v6.0.0] - 2026-05-27
+
+Added a Kafka event trail around the existing order and inventory reservation workflow.
+
+- Added `OrderCreated` and `OrderConfirmed` events from the order service.
+- Added `InventoryReserved` and `InventoryRejected` events from the inventory service.
+- Added lightweight Kafka publishers that serialize event payloads as JSON strings.
+- Kept the reservation flow intact while making the system easier to extend with downstream consumers later.
+- Added unit-test coverage for event publishing calls in both the order and inventory services.
+- Added Kafka producer configuration placeholders in the service configuration files.
+
 ## [v5.0.0] - 2026-05-21
 
 Changed the order flow from a simple inventory check into an inventory reservation workflow.

@@ -4,6 +4,7 @@ import com.cnkart.order.dto.InventoryReservationRequest;
 import com.cnkart.order.dto.InventoryReservationResponse;
 import com.cnkart.order.dto.OrderRequest;
 import com.cnkart.order.dto.OrderResponse;
+import com.cnkart.order.event.OrderEventPublisher;
 import com.cnkart.order.feign.InventoryService;
 import com.cnkart.order.model.OrderStatus;
 import com.cnkart.order.repository.OrderRepository;
@@ -30,6 +31,9 @@ class OrderServiceTest {
     private OrderRepository orderRepository;
 
     @Mock
+    private OrderEventPublisher orderEventPublisher;
+
+    @Mock
     private InventoryService inventoryService;
 
     @InjectMocks
@@ -48,6 +52,8 @@ class OrderServiceTest {
         assertThat(response.getIdempotencyKey()).isEqualTo("order-key-1");
         assertThat(response.getStatus()).isEqualTo(OrderStatus.CONFIRMED);
         assertThat(response.getMessage()).isEqualTo("Order confirmed after inventory reservation");
+        verify(orderEventPublisher).publishOrderCreated(org.mockito.ArgumentMatchers.any(com.cnkart.order.model.Order.class));
+        verify(orderEventPublisher).publishOrderConfirmed(org.mockito.ArgumentMatchers.any(com.cnkart.order.model.Order.class));
         verify(inventoryService).reserveStock(argThat(reservationRequest ->
                 reservationRequest.getOrderReference().startsWith("ORD-")
                         && reservationRequest.getSkuCode().equals("1")
@@ -66,6 +72,8 @@ class OrderServiceTest {
 
         assertThat(response.getStatus()).isEqualTo(OrderStatus.REJECTED);
         assertThat(response.getMessage()).isEqualTo("Insufficient stock available for reservation");
+        verify(orderEventPublisher).publishOrderCreated(org.mockito.ArgumentMatchers.any(com.cnkart.order.model.Order.class));
+        verify(orderEventPublisher, never()).publishOrderConfirmed(org.mockito.ArgumentMatchers.any(com.cnkart.order.model.Order.class));
     }
 
     @Test
@@ -78,6 +86,8 @@ class OrderServiceTest {
 
         assertThat(response.getStatus()).isEqualTo(OrderStatus.FAILED);
         assertThat(response.getMessage()).isEqualTo("Order failed while reserving inventory");
+        verify(orderEventPublisher).publishOrderCreated(org.mockito.ArgumentMatchers.any(com.cnkart.order.model.Order.class));
+        verify(orderEventPublisher, never()).publishOrderConfirmed(org.mockito.ArgumentMatchers.any(com.cnkart.order.model.Order.class));
     }
 
     @Test
@@ -93,6 +103,8 @@ class OrderServiceTest {
         assertThat(response.getOrderReference()).isEqualTo("ORD-existing");
         assertThat(response.getStatus()).isEqualTo(OrderStatus.CONFIRMED);
         assertThat(response.getMessage()).isEqualTo("Duplicate order request detected, returning existing order status");
+        verify(orderEventPublisher, never()).publishOrderCreated(org.mockito.ArgumentMatchers.any(com.cnkart.order.model.Order.class));
+        verify(orderEventPublisher, never()).publishOrderConfirmed(org.mockito.ArgumentMatchers.any(com.cnkart.order.model.Order.class));
         verify(inventoryService, never()).reserveStock(any(InventoryReservationRequest.class));
     }
 

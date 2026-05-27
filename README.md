@@ -25,6 +25,7 @@ The services work together like this:
 - Idempotency key handling to avoid duplicate order creation on retries
 - Inventory reservation before order confirmation
 - Pessimistic locking during stock reservation to reduce overselling risk
+- Kafka domain events for order creation, inventory reservation, inventory rejection, and order confirmation
 - Generated order references for easier order tracing
 - Service-local configuration files for each module
 - Independent service startup and runtime lifecycle
@@ -39,6 +40,7 @@ The services work together like this:
 - Spring Cloud Netflix Eureka
 - Spring Cloud OpenFeign
 - Spring Cloud Netflix Hystrix
+- Spring Kafka
 - MySQL
 - Lombok
 
@@ -50,6 +52,15 @@ The services work together like this:
 | `item` | `8081` | Create and list catalog items |
 | `order` | `8082` | Create idempotent orders and track status after inventory reservation |
 | `inventory` | `8083` | Check stock and reserve available quantity for orders |
+
+## Event Flow
+
+| Event | Producer | Meaning |
+| --- | --- | --- |
+| `OrderCreated` | `order` | An order was accepted and stored in `PENDING` state |
+| `InventoryReserved` | `inventory` | Stock was reserved successfully for the order |
+| `InventoryRejected` | `inventory` | Reservation was declined because stock was unavailable or invalid |
+| `OrderConfirmed` | `order` | The order was confirmed after inventory reservation succeeded |
 
 ## Example API Calls
 
@@ -225,8 +236,12 @@ flowchart LR
     Order --> Pending["PENDING order with idempotency key"]
     Pending --> Reservation["POST /api/inventory/reservations"]
     Reservation --> Inventory
+    Pending --> OrderCreated["Kafka: OrderCreated"]
     Inventory --> Confirmed["CONFIRMED after stock deduction"]
     Inventory --> Rejected["REJECTED without stock deduction"]
+    Inventory --> InventoryReserved["Kafka: InventoryReserved"]
+    Inventory --> InventoryRejected["Kafka: InventoryRejected"]
+    Confirmed --> OrderConfirmed["Kafka: OrderConfirmed"]
     Pending --> Failed["FAILED"]
     Item --> ItemDB[(item_service DB)]
     Inventory --> InvDB[(inventory_service DB)]
@@ -244,6 +259,7 @@ flowchart LR
 - Reserving inventory before confirmation instead of only checking stock availability
 - Applying pessimistic locking during reservation to protect stock updates
 - Returning traceable order references to support debugging and future event workflows
+- Emitting Kafka events from the order and inventory services for downstream workflows
 - Separating service data, config, and startup responsibility
 - Practicing REST, JPA, and distributed-system wiring in one repo
 
