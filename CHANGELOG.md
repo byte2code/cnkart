@@ -2,6 +2,16 @@
 
 All notable changes to this project are documented in this file.
 
+## [v7.0.0] - 2026-05-28
+
+Added a Docker Compose-based local runtime for the CNKart microservice suite.
+
+- Added Dockerfiles for `discovery-server`, `item`, `inventory`, and `order`.
+- Added a root `docker-compose.yml` that starts MySQL, Kafka, Eureka, and all CNKart services together.
+- Added environment-variable-based configuration so the same services can run locally or in containers without code changes.
+- Added a root `SERVICE_STARTUP.md` guide covering Docker Compose and manual service startup order.
+- Updated the README with the compose-aware flow diagram and startup instructions.
+
 ## [v6.0.0] - 2026-05-27
 
 Added a Kafka event trail around the existing order and inventory reservation workflow.

@@ -42,6 +42,8 @@ The services work together like this:
 - Spring Cloud Netflix Hystrix
 - Spring Kafka
 - MySQL
+- Docker
+- Docker Compose
 - Lombok
 
 ## Services
@@ -221,17 +223,41 @@ Each service keeps its own `pom.xml`, `mvnw`, source tree, and configuration fil
 
 The local configuration files currently point to `localhost` MySQL settings, so update the database username and password if your environment differs.
 
+For a repeatable local environment, use Docker Compose:
+
+- `docker compose up --build`
+- [SERVICE_STARTUP.md](/Users/bipinverma/Documents/myProjects/cnkart/SERVICE_STARTUP.md)
+
+## Docker Compose
+
+The repo includes Dockerfiles for each service and a root `docker-compose.yml` that starts:
+
+- `discovery-server`
+- `item`
+- `inventory`
+- `order`
+- MySQL
+- Kafka
+
+The compose setup uses environment variables so the same services can run in containers or directly from your IDE without code changes.
+
 ## Flow Diagram
 
 ```mermaid
 flowchart LR
-    Client[Client] --> Order["order-service :8082"]
-    Client --> Item["item-service :8081"]
-    Client --> Inventory["inventory-service :8083"]
+    Client[Client] --> Item["item-service :8081"]
+    Client --> Order["order-service :8082"]
 
-    Discovery["discovery-server :8761"] --- Item
-    Discovery --- Inventory
-    Discovery --- Order
+    subgraph Compose["Docker Compose Local Stack"]
+        Discovery["discovery-server :8761"]
+        Inventory["inventory-service :8083"]
+        MySQL[(MySQL :3306)]
+        Kafka[(Kafka :9092)]
+    end
+
+    Item --> Discovery
+    Order --> Discovery
+    Inventory --> Discovery
 
     Order --> Pending["PENDING order with idempotency key"]
     Pending --> Reservation["POST /api/inventory/reservations"]
@@ -243,9 +269,11 @@ flowchart LR
     Inventory --> InventoryRejected["Kafka: InventoryRejected"]
     Confirmed --> OrderConfirmed["Kafka: OrderConfirmed"]
     Pending --> Failed["FAILED"]
-    Item --> ItemDB[(item_service DB)]
-    Inventory --> InvDB[(inventory_service DB)]
-    Order --> OrderDB[(order_service DB)]
+    Item --> MySQL
+    Inventory --> MySQL
+    Order --> MySQL
+    Order --> Kafka
+    Inventory --> Kafka
 ```
 
 ## Learning Highlights
