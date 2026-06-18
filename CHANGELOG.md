@@ -2,6 +2,17 @@
 
 All notable changes to this project are documented in this file.
 
+## [v7.2.0] - 2026-06-18
+
+### Summary
+Replaced Hystrix with Resilience4j circuit breaker in the order service.
+
+### Highlights
+- Replaced `spring-cloud-starter-netflix-hystrix` with `spring-cloud-starter-circuitbreaker-resilience4j` in the order service.
+- Removed Hystrix annotations (`@EnableHystrix`, `@EnableHystrixDashboard`, `@HystrixCommand`) and configuration blocks.
+- Added `@CircuitBreaker` annotation and updated the fallback method signature in `OrderController`.
+- Enabled OpenFeign circuit breaker globally for the order service.
+
 ## [v7.1.0] - 2026-06-18
 
 ### Summary

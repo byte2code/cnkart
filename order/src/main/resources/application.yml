@@ -13,6 +13,10 @@ spring:
     hibernate.ddl-auto: update
   application:
     name: order-service
+  cloud:
+    openfeign:
+      circuitbreaker:
+        enabled: true
 eureka:
   client:
     service-url:
@@ -31,6 +35,3 @@ management:
   endpoint:
     health:
       show-details: always
-hystrix:
-  dashboard:
-    proxy-stream-allow-list: "*"

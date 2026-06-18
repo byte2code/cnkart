@@ -12,7 +12,7 @@ import com.cnkart.order.dto.OrderRequest;
 import com.cnkart.order.dto.OrderResponse;
 import com.cnkart.order.model.OrderStatus;
 import com.cnkart.order.service.OrderService;
-import com.netflix.hystrix.contrib.javanica.annotation.HystrixCommand;
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -27,13 +27,14 @@ public class OrderController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    @HystrixCommand(fallbackMethod = "fallbackPlaceOrder")
+    @CircuitBreaker(name = "inventory", fallbackMethod = "fallbackPlaceOrder")
     public OrderResponse placeOrder(@RequestBody OrderRequest orderRequest) {
         log.info("Placing Order");
         return orderService.placeOrder(orderRequest);
     }
     
-    public OrderResponse fallbackPlaceOrder(@RequestBody OrderRequest orderRequest) {
+    public OrderResponse fallbackPlaceOrder(OrderRequest orderRequest, Throwable t) {
+        log.error("Fallback for order placement triggered due to: {}", t.getMessage());
         return new OrderResponse(null, orderRequest.getIdempotencyKey(), OrderStatus.FAILED, "Order service is not available");
     }
 }

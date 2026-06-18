@@ -20,7 +20,7 @@ The services work together like this:
 - MySQL-backed service databases
 - Eureka service discovery
 - OpenFeign-based service-to-service communication
-- Hystrix fallback handling in the order flow
+- Resilience4j circuit breaker fallback handling in the order flow
 - Order lifecycle states: `PENDING`, `CONFIRMED`, `REJECTED`, and `FAILED`
 - Idempotency key handling to avoid duplicate order creation on retries
 - Inventory reservation before order confirmation
@@ -39,7 +39,7 @@ The services work together like this:
 - Spring Data JPA
 - Spring Cloud Netflix Eureka
 - Spring Cloud OpenFeign
-- Spring Cloud Netflix Hystrix
+- Spring Cloud Circuit Breaker Resilience4j
 - Spring Kafka
 - MySQL
 - Docker
@@ -281,7 +281,7 @@ flowchart LR
 - Converting a monolith into a microservice suite
 - Using Eureka to register and discover services
 - Calling one service from another with OpenFeign
-- Keeping order placement resilient with Hystrix fallback
+- Keeping order placement resilient with Resilience4j fallback
 - Modeling order state transitions instead of only saving successful orders
 - Using idempotency keys to make retry behavior safe for checkout APIs
 - Reserving inventory before confirmation instead of only checking stock availability
