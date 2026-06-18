@@ -2,6 +2,17 @@
 
 All notable changes to this project are documented in this file.
 
+## [v7.3.0] - 2026-06-18
+
+### Summary
+Added `@ControllerAdvice` exception handling and a structured `ApiError` representation across all 3 business services.
+
+### Highlights
+- Created `ApiError` class in `com.cnkart.item.dto`, `com.cnkart.inventory.dto`, and `com.cnkart.order.dto` with fields for timestamp, status, error reason, message, and request path.
+- Created `GlobalExceptionHandler` annotated with `@ControllerAdvice` in `com.cnkart.item.exception`, `com.cnkart.inventory.exception`, and `com.cnkart.order.exception` to handle `IllegalArgumentException` and generic `Exception`.
+- Resolved Lombok compilation errors in the `item` service by adding the `maven-compiler-plugin` configuration and setting `<lombok.version>` to `1.18.36` in `item/pom.xml`.
+- Configured H2 database properties in `ItemApplicationTests` and added `h2` test dependency to `item/pom.xml` so the item service test context loads successfully without a running MySQL instance.
+
 ## [v7.2.0] - 2026-06-18
 
 ### Summary
