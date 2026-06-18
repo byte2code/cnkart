@@ -12,8 +12,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 public interface InventoryService {
 
 	
-	 	@GetMapping("/api/inventory?skuCode={skuCode}&qty={qty}")
-	    public boolean isInStock(@RequestParam Long skuCode,@RequestParam Integer qty);
+	 	@GetMapping("/api/inventory")
+	    public boolean isInStock(@RequestParam("skuCode") Long skuCode, @RequestParam("qty") Integer qty);
 
         @PostMapping("/api/inventory/reservations")
         InventoryReservationResponse reserveStock(@RequestBody InventoryReservationRequest request);

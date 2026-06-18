@@ -2,6 +2,15 @@
 
 All notable changes to this project are documented in this file.
 
+## [v7.1.0] - 2026-06-18
+
+### Summary
+Fixed Feign client query parameter interpolation bug.
+
+### Highlights
+- Removed query parameter placeholders from the `@GetMapping` annotation inside `InventoryService` interface in the `order` service.
+- Added explicit parameter names inside `@RequestParam` annotations to ensure query parameters map correctly during remote calls.
+
 ## [v7.0.0] - 2026-05-28
 
 Added a Docker Compose-based local runtime for the CNKart microservice suite.
