@@ -13,6 +13,10 @@ import com.cnkart.order.dto.OrderResponse;
 import com.cnkart.order.model.OrderStatus;
 import com.cnkart.order.service.OrderService;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -21,6 +25,7 @@ import lombok.extern.slf4j.Slf4j;
 @RequestMapping("/api/order")
 @RequiredArgsConstructor
 @Slf4j
+@Tag(name = "Order", description = "Place and track orders with idempotency support")
 public class OrderController {
 
     private final OrderService orderService;
@@ -28,6 +33,11 @@ public class OrderController {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     @CircuitBreaker(name = "inventory", fallbackMethod = "fallbackPlaceOrder")
+    @Operation(summary = "Place an order", description = "Creates a new order, reserves inventory via the Inventory Service, and returns the order status. Duplicate requests with the same idempotency key return the existing order.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "201", description = "Order created and processed"),
+            @ApiResponse(responseCode = "500", description = "Internal server error")
+    })
     public OrderResponse placeOrder(@RequestBody OrderRequest orderRequest) {
         log.info("Placing Order");
         return orderService.placeOrder(orderRequest);

@@ -27,6 +27,7 @@ The services work together like this:
 - Pessimistic locking during stock reservation to reduce overselling risk
 - Kafka domain events for order creation, inventory reservation, inventory rejection, and order confirmation
 - Generated order references for easier order tracing
+- Swagger / OpenAPI documentation for order and inventory service endpoints
 - Service-local configuration files for each module
 - Independent service startup and runtime lifecycle
 
@@ -45,6 +46,7 @@ The services work together like this:
 - Docker
 - Docker Compose
 - Lombok
+- springdoc-openapi (Swagger UI)
 
 ## Services
 

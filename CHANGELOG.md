@@ -2,6 +2,18 @@
 
 All notable changes to this project are documented in this file.
 
+## [v7.4.0] - 2026-06-28
+
+### Summary
+Added Swagger / OpenAPI documentation to the order and inventory services.
+
+### Highlights
+- Added `springdoc-openapi-ui` (v1.7.0) dependency to `order` and `inventory` services.
+- Created `OpenApiConfig` classes in both services with service-specific API titles and descriptions.
+- Annotated `OrderController` with `@Tag`, `@Operation`, and `@ApiResponses` for the place-order endpoint.
+- Annotated `InventoryController` with `@Tag`, `@Operation`, `@Parameter`, and `@ApiResponses` for the stock-check and reservation endpoints.
+- Swagger UI available at `/swagger-ui.html` and OpenAPI spec at `/v3/api-docs` for both services.
+
 ## [v7.3.0] - 2026-06-18
 
 ### Summary
