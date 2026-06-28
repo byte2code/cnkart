@@ -2,6 +2,25 @@
 
 All notable changes to this project are documented in this file.
 
+## [v7.7.0] - 2026-06-29
+
+### Summary
+Added a curl-based smoke test script and finalized all project documentation for the v7.x release.
+
+### Highlights
+- Added `scripts/smoke-test.sh` — an end-to-end smoke test that exercises all public endpoints (item CRUD, inventory check + reservation, order placement + idempotency, Swagger UI, Eureka dashboard) with coloured pass/fail output.
+- Rewrote `README.md` with:
+  - Quick Start section for clone-and-run in 2 minutes.
+  - Mermaid architecture diagram showing all services, infrastructure, and communication paths.
+  - Mermaid sequence diagram for the full order placement flow (including circuit breaker fallback).
+  - Expanded event flow table with Kafka topics, producers, and consumers.
+  - Event payload JSON examples for all 4 domain events.
+  - Swagger UI quick-reference table for order and inventory services.
+  - Error response example using the structured `ApiError` format.
+  - Smoke test usage documentation.
+  - Updated project structure tree with `scripts/`, `docker/`, and `docker-compose.override.yml`.
+  - Updated tech stack, features, and learning highlights to reflect all v7.x additions.
+
 ## [v7.6.0] - 2026-06-29
 
 ### Summary
