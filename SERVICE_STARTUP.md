@@ -68,6 +68,7 @@ The script exercises item creation, inventory checks, order placement, idempoten
 
 Swagger UI is available for:
 
+- **Item service**: [http://localhost:8081/swagger-ui.html](http://localhost:8081/swagger-ui.html)
 - **Order service**: [http://localhost:8082/swagger-ui.html](http://localhost:8082/swagger-ui.html)
 - **Inventory service**: [http://localhost:8083/swagger-ui.html](http://localhost:8083/swagger-ui.html)
 
