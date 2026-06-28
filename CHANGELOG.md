@@ -2,6 +2,15 @@
 
 All notable changes to this project are documented in this file.
 
+## [v7.6.0] - 2026-06-29
+
+### Summary
+Added `docker-compose.override.yml` with environment variable defaults to simplify local setup.
+
+### Highlights
+- Created `docker-compose.override.yml` which exposes common application settings (like `MYSQL_ROOT_PASSWORD`, `SERVER_PORT`, and `SPRING_DATASOURCE_URL`) as overridable environment variables with fallback defaults.
+- This allows developers to clone the repository and run `docker compose up` within minutes without needing to modify the base `docker-compose.yml` file.
+
 ## [v7.5.0] - 2026-06-29
 
 ### Summary

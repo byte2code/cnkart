@@ -1,0 +1,36 @@
+services:
+  mysql:
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root@123}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-item_service}
+
+  discovery-server:
+    environment:
+      SERVER_PORT: ${DISCOVERY_SERVER_PORT:-8761}
+      EUREKA_INSTANCE_HOSTNAME: ${EUREKA_INSTANCE_HOSTNAME:-discovery-server}
+
+  item:
+    environment:
+      SERVER_PORT: ${ITEM_SERVER_PORT:-8081}
+      SPRING_DATASOURCE_URL: ${ITEM_DATASOURCE_URL:-jdbc:mysql://mysql:3306/item_service?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC}
+      SPRING_DATASOURCE_USERNAME: ${MYSQL_USER:-root}
+      SPRING_DATASOURCE_PASSWORD: ${MYSQL_PASSWORD:-root@123}
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: ${EUREKA_URL:-http://discovery-server:8761/eureka/}
+
+  inventory:
+    environment:
+      SERVER_PORT: ${INVENTORY_SERVER_PORT:-8083}
+      SPRING_DATASOURCE_URL: ${INVENTORY_DATASOURCE_URL:-jdbc:mysql://mysql:3306/inventory_service?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC}
+      SPRING_DATASOURCE_USERNAME: ${MYSQL_USER:-root}
+      SPRING_DATASOURCE_PASSWORD: ${MYSQL_PASSWORD:-root@123}
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: ${KAFKA_BOOTSTRAP_SERVERS:-kafka:29092}
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: ${EUREKA_URL:-http://discovery-server:8761/eureka/}
+
+  order:
+    environment:
+      SERVER_PORT: ${ORDER_SERVER_PORT:-8082}
+      SPRING_DATASOURCE_URL: ${ORDER_DATASOURCE_URL:-jdbc:mysql://mysql:3306/order_service?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC}
+      SPRING_DATASOURCE_USERNAME: ${MYSQL_USER:-root}
+      SPRING_DATASOURCE_PASSWORD: ${MYSQL_PASSWORD:-root@123}
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: ${KAFKA_BOOTSTRAP_SERVERS:-kafka:29092}
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: ${EUREKA_URL:-http://discovery-server:8761/eureka/}
