@@ -8,6 +8,7 @@ spring:
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       group-id: order-service
+      auto-offset-reset: earliest
   datasource:
     url: ${SPRING_DATASOURCE_URL:jdbc:mysql://localhost:3306/order_service}
     username: ${SPRING_DATASOURCE_USERNAME:root}
@@ -28,6 +29,20 @@ eureka:
 server:
   port: ${SERVER_PORT:8082}
 
+resilience4j:
+  circuitbreaker:
+    instances:
+      inventoryService:
+        slidingWindowSize: 10
+        failureRateThreshold: 50
+        waitDurationInOpenState: 10000
+        permittedNumberOfCallsInHalfOpenState: 3
+  retry:
+    instances:
+      inventoryService:
+        maxAttempts: 3
+        waitDuration: 1000
+        
 management:
   health:
     circuitbreakers:

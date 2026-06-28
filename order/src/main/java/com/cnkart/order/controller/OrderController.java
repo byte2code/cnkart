@@ -32,7 +32,8 @@ public class OrderController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    @CircuitBreaker(name = "inventory", fallbackMethod = "fallbackPlaceOrder")
+    @CircuitBreaker(name = "inventoryService", fallbackMethod = "fallbackPlaceOrder")
+    @io.github.resilience4j.retry.annotation.Retry(name = "inventoryService")
     @Operation(summary = "Place an order", description = "Creates a new order, reserves inventory via the Inventory Service, and returns the order status. Duplicate requests with the same idempotency key return the existing order.")
     @ApiResponses({
             @ApiResponse(responseCode = "201", description = "Order created and processed"),

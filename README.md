@@ -27,6 +27,14 @@ docker compose up --build
 
 The `docker-compose.override.yml` ships sensible defaults — no `.env` file is needed for a first run.
 
+## Environment Variables
+
+All services extract their configuration to environment variables. You must set these if running manually:
+- `SPRING_DATASOURCE_URL`, `SPRING_DATASOURCE_USERNAME`, `SPRING_DATASOURCE_PASSWORD`
+- `SPRING_KAFKA_BOOTSTRAP_SERVERS`
+- `EUREKA_CLIENT_SERVICEURL_DEFAULTZONE`
+- `SERVER_PORT`
+
 ## Concepts / Features Covered
 
 - Spring Boot REST APIs
@@ -164,8 +172,7 @@ sequenceDiagram
 | --- | --- | --- | --- | --- |
 | `OrderCreated` | `cnkart.order.events` | `order` | — | An order was accepted and stored in `PENDING` state |
 | `OrderConfirmed` | `cnkart.order.events` | `order` | — | The order was confirmed after inventory reservation succeeded |
-| `InventoryReserved` | `cnkart.inventory.events` | `inventory` | `order` (stub) | Stock was reserved successfully for the order |
-| `InventoryRejected` | `cnkart.inventory.events` | `inventory` | `order` (stub) | Reservation was declined because stock was unavailable or invalid |
+| `InventoryReserved/Rejected` | `cnkart.inventory.events` | `inventory` | `order` | Order service logs reservation outcome for observability |
 
 ### Event Payload Examples
 

@@ -21,6 +21,17 @@ The exposed ports are:
 - `3306` for MySQL
 - `9092` for Kafka
 
+## Environment Variables
+
+All services extract their configuration to environment variables (secrets-extraction). You must set these if running manually, or rely on defaults in `docker-compose.override.yml`:
+
+- `SPRING_DATASOURCE_URL`: JDBC URL for the MySQL database
+- `SPRING_DATASOURCE_USERNAME`: Database username
+- `SPRING_DATASOURCE_PASSWORD`: Database password
+- `SPRING_KAFKA_BOOTSTRAP_SERVERS`: Kafka broker address (e.g., `localhost:9092`)
+- `EUREKA_CLIENT_SERVICEURL_DEFAULTZONE`: Eureka server URL (e.g., `http://localhost:8761/eureka/`)
+- `SERVER_PORT`: Port for the Spring Boot application
+
 ## Manual Startup
 
 Use manual startup when you want to run the services one by one from your IDE or terminal.
