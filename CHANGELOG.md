@@ -2,6 +2,15 @@
 
 All notable changes to this project are documented in this file.
 
+## [v7.5.0] - 2026-06-29
+
+### Summary
+Added Kafka consumer stub in the `order` service to close the event loop.
+
+### Highlights
+- Added `InventoryEventListener` class with `@KafkaListener` to consume events from `cnkart.inventory.events`.
+- Configured Kafka consumer deserializers (`StringDeserializer`) and `group-id` in `order-service`'s `application.yml`.
+
 ## [v7.4.0] - 2026-06-28
 
 ### Summary
