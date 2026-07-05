@@ -4,8 +4,11 @@ import com.cnkart.order.model.Order;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.kafka.core.KafkaTemplate;
+import com.cnkart.order.model.OutboxEvent;
+import com.cnkart.order.repository.OutboxEventRepository;
 import org.springframework.stereotype.Service;
+
+import java.time.LocalDateTime;
 
 @Service
 @RequiredArgsConstructor
@@ -14,7 +17,7 @@ public class OrderEventPublisher {
 
     private static final String TOPIC = "cnkart.order.events";
 
-    private final KafkaTemplate<String, String> kafkaTemplate;
+    private final OutboxEventRepository outboxEventRepository;
     private final ObjectMapper objectMapper;
 
     public void publishOrderCreated(Order order) {
@@ -48,9 +51,17 @@ public class OrderEventPublisher {
 
     private void publish(Object event, String key) {
         try {
-            kafkaTemplate.send(TOPIC, key, objectMapper.writeValueAsString(event));
+            OutboxEvent outboxEvent = OutboxEvent.builder()
+                    .aggregateType("Order")
+                    .aggregateId(key)
+                    .eventType(event.getClass().getSimpleName())
+                    .payload(objectMapper.writeValueAsString(event))
+                    .status("PENDING")
+                    .createdAt(LocalDateTime.now())
+                    .build();
+            outboxEventRepository.save(outboxEvent);
         } catch (Exception exception) {
-            log.warn("Unable to publish order event {} for key {}: {}", event.getClass().getSimpleName(), key, exception.getMessage());
+            log.warn("Unable to save outbox event {} for key {}: {}", event.getClass().getSimpleName(), key, exception.getMessage());
         }
     }
 }

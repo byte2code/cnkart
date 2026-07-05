@@ -14,6 +14,7 @@ import com.cnkart.order.feign.InventoryService;
 import com.cnkart.order.model.Order;
 import com.cnkart.order.model.OrderStatus;
 import com.cnkart.order.repository.OrderRepository;
+import org.springframework.transaction.support.TransactionTemplate;
 
 
 @Service
@@ -22,11 +23,13 @@ public class OrderService {
     private final OrderRepository orderRepository;
     private final OrderEventPublisher orderEventPublisher;
     private final InventoryService inventoryService;
+    private final TransactionTemplate transactionTemplate;
     
-    public OrderService(OrderRepository orderRepository, OrderEventPublisher orderEventPublisher, InventoryService inventoryService) {
+    public OrderService(OrderRepository orderRepository, OrderEventPublisher orderEventPublisher, InventoryService inventoryService, TransactionTemplate transactionTemplate) {
         this.orderRepository = orderRepository;
         this.orderEventPublisher = orderEventPublisher;
         this.inventoryService = inventoryService;
+        this.transactionTemplate = transactionTemplate;
     }
 
     public OrderResponse placeOrder(OrderRequest orderRequest) {
@@ -46,8 +49,12 @@ public class OrderService {
         order.setPrice(orderRequest.getPrice());
         order.setQuantity(orderRequest.getQuantity());
         order.setSkuCode(orderRequest.getSkuCode());
-        orderRepository.save(order);
-        orderEventPublisher.publishOrderCreated(order);
+        
+        transactionTemplate.execute(status -> {
+            orderRepository.save(order);
+            orderEventPublisher.publishOrderCreated(order);
+            return null;
+        });
 
         try {
             InventoryReservationResponse reservationResponse = inventoryService.reserveStock(
@@ -55,20 +62,29 @@ public class OrderService {
             );
 
             if (reservationResponse.isReserved()) {
-                order.setStatus(OrderStatus.CONFIRMED);
-                orderRepository.save(order);
-                orderEventPublisher.publishOrderConfirmed(order);
+                transactionTemplate.execute(status -> {
+                    order.setStatus(OrderStatus.CONFIRMED);
+                    orderRepository.save(order);
+                    orderEventPublisher.publishOrderConfirmed(order);
+                    return null;
+                });
                 return toResponse(order, "Order confirmed after inventory reservation");
             }
 
-            order.setStatus(OrderStatus.REJECTED);
-            orderRepository.save(order);
-            orderEventPublisher.publishOrderRolledBack(order, reservationResponse.getMessage());
+            transactionTemplate.execute(status -> {
+                order.setStatus(OrderStatus.REJECTED);
+                orderRepository.save(order);
+                orderEventPublisher.publishOrderRolledBack(order, reservationResponse.getMessage());
+                return null;
+            });
             return toResponse(order, reservationResponse.getMessage());
         } catch (RuntimeException exception) {
-            order.setStatus(OrderStatus.FAILED);
-            orderRepository.save(order);
-            orderEventPublisher.publishOrderRolledBack(order, "Order failed while reserving inventory");
+            transactionTemplate.execute(status -> {
+                order.setStatus(OrderStatus.FAILED);
+                orderRepository.save(order);
+                orderEventPublisher.publishOrderRolledBack(order, "Order failed while reserving inventory");
+                return null;
+            });
             return toResponse(order, "Order failed while reserving inventory");
         }
 
