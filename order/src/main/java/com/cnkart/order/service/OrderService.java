@@ -63,10 +63,12 @@ public class OrderService {
 
             order.setStatus(OrderStatus.REJECTED);
             orderRepository.save(order);
+            orderEventPublisher.publishOrderRolledBack(order, reservationResponse.getMessage());
             return toResponse(order, reservationResponse.getMessage());
         } catch (RuntimeException exception) {
             order.setStatus(OrderStatus.FAILED);
             orderRepository.save(order);
+            orderEventPublisher.publishOrderRolledBack(order, "Order failed while reserving inventory");
             return toResponse(order, "Order failed while reserving inventory");
         }
 

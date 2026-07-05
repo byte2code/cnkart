@@ -39,6 +39,13 @@ public class OrderEventPublisher {
         ), order.getOrderReference());
     }
 
+    public void publishOrderRolledBack(Order order, String reason) {
+        publish(new OrderRolledBackEvent(
+                order.getOrderReference(),
+                reason
+        ), order.getOrderReference());
+    }
+
     private void publish(Object event, String key) {
         try {
             kafkaTemplate.send(TOPIC, key, objectMapper.writeValueAsString(event));
