@@ -434,6 +434,20 @@ The script exercises:
 
 Requires `curl` and `jq`.
 
+## Performance Baseline
+
+The repository includes a [k6](https://k6.io/) load test script to baseline order placement performance.
+
+To run the load test against your local setup:
+```bash
+k6 run scripts/k6-load-test.js
+```
+
+**Expected Baseline on Local Hardware (Docker Compose):**
+- **Throughput:** ~50-100 TPS (Transactions Per Second) depending on hardware.
+- **Latency (p95):** < 500ms
+- **Bottlenecks:** Because of the pessimistic lock in the `inventory` service and synchronous Feign calls, throughput is intentionally constrained to ensure data consistency during order placement. In a production environment, scaling out the `order` and `inventory` instances, along with DB tuning, will improve this baseline.
+
 ## Project Structure
 
 ```text
