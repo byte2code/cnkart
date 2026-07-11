@@ -229,6 +229,42 @@ sequenceDiagram
 }
 ```
 
+## Cross-Repo Integration (Portfolio Architecture)
+
+CNKart is designed to be part of a larger portfolio of microservice ecosystems, demonstrating cross-domain event-driven architecture. The various domains interact asynchronously via Kafka.
+
+```mermaid
+flowchart LR
+    subgraph HotelDomain["Hotel Booking System"]
+        Hotel["Hotel Service"]
+    end
+    
+    subgraph TelecomDomain["Telecom Ecosystem"]
+        Telecom["Telecom Service"]
+    end
+    
+    subgraph EcommerceDomain["CNKart (This Repo)"]
+        Order["Order Service"]
+        Inventory["Inventory Service"]
+    end
+    
+    subgraph LogisticsDomain["Logistics Ecosystem"]
+        Shipping["Shipping Service"]
+    end
+    
+    KafkaBroker{{"Kafka Broker (Event Bus)"}}
+    
+    Hotel -- "BookingConfirmedEvent" --> KafkaBroker
+    KafkaBroker -- "Consumes (Create WiFi Plan)" --> Telecom
+    
+    Order -- "OrderConfirmedEvent" --> KafkaBroker
+    KafkaBroker -- "Consumes (Trigger Shipping)" --> Shipping
+    
+    style KafkaBroker fill:#f96,stroke:#333,stroke-width:2px
+```
+
+When an order is successfully placed and confirmed in CNKart, the `OrderConfirmed` event is broadcasted. A downstream Logistics system (in another repository) can consume this event to independently trigger the shipping and delivery lifecycle without tight REST coupling.
+
 ## Order Lifecycle
 
 | Status | Meaning |
