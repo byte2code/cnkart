@@ -145,7 +145,7 @@ flowchart TB
     Inventory --> MySQL
     APIGateway --> Redis
 
-    Order -->|publishes (Outbox)| Kafka
+    Order -->|"publishes (Outbox)"| Kafka
     Inventory -->|publishes| Kafka
     Order -->|"consumes (Saga stub)"| Kafka
 ```
