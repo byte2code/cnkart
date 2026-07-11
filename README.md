@@ -8,6 +8,7 @@ CNKart started as a monolithic REST API and is now organized as a small microser
 
 The services work together like this:
 
+- `api-gateway` acts as the single entry point for all client traffic, providing rate-limiting and audit logging.
 - `item` manages catalog items.
 - `inventory` checks stock availability and reserves stock for an order before confirmation.
 - `order` creates traceable order references, tracks order status, handles duplicate order submissions with an idempotency key, and confirms orders only after inventory reservation succeeds.
@@ -47,12 +48,17 @@ All services extract their configuration to environment variables. You must set 
 - Idempotency key handling to avoid duplicate order creation on retries
 - Inventory reservation before order confirmation
 - Pessimistic locking during stock reservation to reduce overselling risk
+- Explicit Saga pattern with compensating transactions (OrderRolledBack event) if inventory rejects an order
+- Transactional Outbox pattern to ensure reliable event publishing (events and orders committed in a single transaction)
 - Kafka domain events for order creation, inventory reservation, inventory rejection, and order confirmation
 - Kafka consumer stub in order service — closes the event loop by listening to inventory events
 - Generated order references for easier order tracing
 - Swagger / OpenAPI documentation for order and inventory service endpoints
 - `@ControllerAdvice` global error handling with structured `ApiError` responses across all business services
 - `SecurityAuditFilter` in the API Gateway for logging incoming requests (IP, path, method)
+- Redis-based rate limiting in the API Gateway
+- Observability stack with Spring Boot Actuator, Micrometer, Spring Cloud Sleuth, and Zipkin distributed tracing
+- Integration Test suite leveraging Testcontainers (MySQL, Kafka) for real environment simulation
 - `docker-compose.override.yml` with env-var defaults for clone-and-run setup
 - Curl-based smoke test script to verify the full system
 - Service-local configuration files for each module
@@ -66,12 +72,15 @@ All services extract their configuration to environment variables. You must set 
 - Spring Web
 - Spring Data JPA
 - Spring Cloud Netflix Eureka
+- Spring Cloud Gateway
 - Spring Cloud OpenFeign
 - Spring Cloud Circuit Breaker Resilience4j
+- Spring Cloud Sleuth & Zipkin
 - Spring Kafka
 - springdoc-openapi (Swagger UI)
-- MySQL
+- MySQL & Redis
 - Docker & Docker Compose
+- Testcontainers
 - Lombok
 
 ## Services
@@ -79,6 +88,7 @@ All services extract their configuration to environment variables. You must set 
 | Service | Port | Responsibility |
 | --- | --- | --- |
 | `discovery-server` | `8761` | Eureka registry for service registration |
+| `api-gateway` | `8080` | Entry point for traffic, rate limiting, and security auditing |
 | `item` | `8081` | Create and list catalog items |
 | `order` | `8082` | Create idempotent orders and track status after inventory reservation |
 | `inventory` | `8083` | Check stock and reserve available quantity for orders |
@@ -101,6 +111,10 @@ flowchart TB
         Eureka["discovery-server :8761"]
     end
 
+    subgraph Gateway["API Gateway"]
+        APIGateway["api-gateway :8080"]
+    end
+
     subgraph Services["Business Services"]
         Item["item-service :8081"]
         Order["order-service :8082"]
@@ -110,11 +124,16 @@ flowchart TB
     subgraph Infra["Infrastructure"]
         MySQL[("MySQL :3306")]
         Kafka[("Kafka :9092")]
+        Redis[("Redis :6379")]
+        Zipkin["Zipkin :9411"]
     end
 
-    Client --> Item
-    Client --> Order
+    Client --> APIGateway
+    APIGateway --> Item
+    APIGateway --> Order
+    APIGateway --> Inventory
 
+    APIGateway -.->|registers| Eureka
     Item -.->|registers| Eureka
     Order -.->|registers| Eureka
     Inventory -.->|registers| Eureka
@@ -124,10 +143,11 @@ flowchart TB
     Item --> MySQL
     Order --> MySQL
     Inventory --> MySQL
+    APIGateway --> Redis
 
-    Order -->|publishes| Kafka
+    Order -->|publishes (Outbox)| Kafka
     Inventory -->|publishes| Kafka
-    Order -->|"consumes (stub)"| Kafka
+    Order -->|"consumes (Saga stub)"| Kafka
 ```
 
 ## Order Placement Flow
@@ -454,14 +474,16 @@ k6 run scripts/k6-load-test.js
 ```text
 cnkart/
 ├── discovery-server/          # Eureka registry
+├── api-gateway/               # Spring Cloud Gateway (Rate limiting, Routing)
 ├── item/                      # Catalog item service
 ├── inventory/                 # Stock + reservation service
-├── order/                     # Order placement service
+├── order/                     # Order placement service (Outbox + Saga)
 ├── docker/
 │   └── mysql/
 │       └── init/              # DB init scripts (creates schemas)
 ├── scripts/
-│   └── smoke-test.sh          # Curl-based end-to-end smoke test
+│   ├── smoke-test.sh          # Curl-based end-to-end smoke test
+│   └── k6-load-test.js        # Performance baseline test script
 ├── docker-compose.yml         # Full stack definition
 ├── docker-compose.override.yml # Env var defaults for clone-and-run
 ├── SERVICE_STARTUP.md         # Startup guide
@@ -490,11 +512,13 @@ See [SERVICE_STARTUP.md](SERVICE_STARTUP.md) for the full startup guide.
 
 1. Start MySQL and create the databases `item_service`, `inventory_service`, and `order_service`.
 2. Start Kafka and make sure it is reachable on `localhost:9092`.
-3. Start `discovery-server` on port `8761`.
-4. Start `inventory` on port `8083`.
-5. Start `item` on port `8081`.
-6. Start `order` on port `8082`.
-7. Call the endpoints above from Postman, curl, or any REST client.
+3. Start Redis and Zipkin.
+4. Start `discovery-server` on port `8761`.
+5. Start `inventory` on port `8083`.
+6. Start `item` on port `8081`.
+7. Start `order` on port `8082`.
+8. Start `api-gateway` on port `8080`.
+9. Call the endpoints above via the API gateway (`http://localhost:8080`) from Postman, curl, or any REST client.
 
 The local configuration files currently point to `localhost` MySQL settings, so update the database username and password if your environment differs.
 
@@ -527,6 +551,10 @@ The compose setup uses environment variables so the same services can run in con
 - Documenting REST APIs with Swagger / OpenAPI
 - Standardising error responses with `@ControllerAdvice` and structured DTOs
 - Separating service data, config, and startup responsibility
+- Centralizing external access with Spring Cloud Gateway and adding Redis-based rate limiting
+- Establishing distributed tracing across the ecosystem using Spring Cloud Sleuth, Zipkin, and Micrometer
+- Guaranteeing reliable event publishing using the Transactional Outbox pattern
+- Executing integration test suites rapidly using Testcontainers instead of mocking databases
 - Practicing REST, JPA, and distributed-system wiring in one repo
 
 ## Notes
