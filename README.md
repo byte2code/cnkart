@@ -52,6 +52,7 @@ All services extract their configuration to environment variables. You must set 
 - Generated order references for easier order tracing
 - Swagger / OpenAPI documentation for order and inventory service endpoints
 - `@ControllerAdvice` global error handling with structured `ApiError` responses across all business services
+- `SecurityAuditFilter` in the API Gateway for logging incoming requests (IP, path, method)
 - `docker-compose.override.yml` with env-var defaults for clone-and-run setup
 - Curl-based smoke test script to verify the full system
 - Service-local configuration files for each module
