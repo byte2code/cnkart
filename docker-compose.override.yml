@@ -16,6 +16,7 @@ services:
       SPRING_DATASOURCE_USERNAME: ${MYSQL_USER:-root}
       SPRING_DATASOURCE_PASSWORD: ${MYSQL_PASSWORD:-root@123}
       EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: ${EUREKA_URL:-http://discovery-server:8761/eureka/}
+      SPRING_ZIPKIN_BASEURL: ${ZIPKIN_URL:-http://zipkin:9411}
 
   inventory:
     environment:
@@ -25,6 +26,7 @@ services:
       SPRING_DATASOURCE_PASSWORD: ${MYSQL_PASSWORD:-root@123}
       SPRING_KAFKA_BOOTSTRAP_SERVERS: ${KAFKA_BOOTSTRAP_SERVERS:-kafka:29092}
       EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: ${EUREKA_URL:-http://discovery-server:8761/eureka/}
+      SPRING_ZIPKIN_BASEURL: ${ZIPKIN_URL:-http://zipkin:9411}
 
   order:
     environment:
@@ -34,6 +36,7 @@ services:
       SPRING_DATASOURCE_PASSWORD: ${MYSQL_PASSWORD:-root@123}
       SPRING_KAFKA_BOOTSTRAP_SERVERS: ${KAFKA_BOOTSTRAP_SERVERS:-kafka:29092}
       EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: ${EUREKA_URL:-http://discovery-server:8761/eureka/}
+      SPRING_ZIPKIN_BASEURL: ${ZIPKIN_URL:-http://zipkin:9411}
 
   api-gateway:
     environment:
@@ -41,3 +44,4 @@ services:
       SPRING_REDIS_HOST: ${REDIS_HOST:-redis}
       SPRING_REDIS_PORT: ${REDIS_PORT:-6379}
       EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: ${EUREKA_URL:-http://discovery-server:8761/eureka/}
+      SPRING_ZIPKIN_BASEURL: ${ZIPKIN_URL:-http://zipkin:9411}
