@@ -2,6 +2,19 @@
 
 All notable changes to this project are documented in this file.
 
+## [v8.0.0] - 2026-07-11
+
+### Summary
+Evolved CNKart toward a production-ready microservice system by adding an observability stack, a Testcontainers integration suite, API Gateway security hardening, performance baselining, and cross-repo architectural documentation.
+
+### Highlights
+- Added Spring Boot Actuator, Spring Cloud Sleuth, and Zipkin to all services (`item`, `inventory`, `order`, `api-gateway`) for distributed tracing and observability.
+- Added `zipkin` service to the Docker Compose stack.
+- Replaced H2 in-memory test databases with Testcontainers (MySQL & Kafka) across all module integration tests (`@SpringBootTest`).
+- Added `SecurityAuditFilter` to the `api-gateway` to log incoming requests (IP, Path, Method).
+- Added a `k6-load-test.js` script to baseline order placement throughput and latency.
+- Updated `README.md` with cross-repo integration flow diagrams showing how CNKart integrates with Hotel, Telecom, and Logistics ecosystems via event-driven architecture.
+
 ## [v7.7.0] - 2026-06-29
 
 ### Summary
