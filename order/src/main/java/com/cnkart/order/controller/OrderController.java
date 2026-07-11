@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
+import javax.validation.Valid;
 
 import com.cnkart.order.dto.OrderRequest;
 import com.cnkart.order.dto.OrderResponse;
@@ -39,7 +40,7 @@ public class OrderController {
             @ApiResponse(responseCode = "201", description = "Order created and processed"),
             @ApiResponse(responseCode = "500", description = "Internal server error")
     })
-    public OrderResponse placeOrder(@RequestBody OrderRequest orderRequest) {
+    public OrderResponse placeOrder(@Valid @RequestBody OrderRequest orderRequest) {
         log.info("Placing Order");
         return orderService.placeOrder(orderRequest);
     }

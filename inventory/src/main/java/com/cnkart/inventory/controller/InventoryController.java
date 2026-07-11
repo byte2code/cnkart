@@ -12,6 +12,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
+import javax.validation.Valid;
 
 @RestController
 @RequestMapping("/api/inventory")
@@ -43,7 +44,7 @@ public class InventoryController {
             @ApiResponse(responseCode = "201", description = "Reservation processed (check response body for reserved status)"),
             @ApiResponse(responseCode = "500", description = "Internal server error")
     })
-    public InventoryReservationResponse reserveStock(@RequestBody InventoryReservationRequest request) {
+    public InventoryReservationResponse reserveStock(@Valid @RequestBody InventoryReservationRequest request) {
         log.info("Received inventory reservation request for orderReference: {}", request.getOrderReference());
         return inventoryService.reserveStock(request);
     }
