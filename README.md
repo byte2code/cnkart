@@ -64,6 +64,13 @@ All services extract their configuration to environment variables. You must set 
 - Service-local configuration files for each module
 - Independent service startup and runtime lifecycle
 
+## Distributed tracing
+
+All three business services (item, inventory, and order) export traces to Zipkin at `localhost:9411` via Spring Cloud Sleuth. Each service's logs also include the `[traceId, spanId]` prefix for correlation across boundaries.
+
+> [!NOTE]
+> After `docker compose up`, open [http://localhost:9411](http://localhost:9411) to see traces across services.
+
 ## Tech Stack
 
 - Java 8+

@@ -59,6 +59,7 @@ services:
       SPRING_DATASOURCE_USERNAME: root
       SPRING_DATASOURCE_PASSWORD: root@123
       EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://discovery-server:8761/eureka/
+      ZIPKIN_URL: http://zipkin:9411
 
   inventory:
     build:
@@ -76,6 +77,7 @@ services:
       SPRING_DATASOURCE_PASSWORD: root@123
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
       EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://discovery-server:8761/eureka/
+      ZIPKIN_URL: http://zipkin:9411
 
   order:
     build:
@@ -94,6 +96,7 @@ services:
       SPRING_DATASOURCE_PASSWORD: root@123
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
       EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://discovery-server:8761/eureka/
+      ZIPKIN_URL: http://zipkin:9411
 
   redis:
     image: redis:6-alpine
