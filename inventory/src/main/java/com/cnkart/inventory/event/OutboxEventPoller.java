@@ -1,13 +1,12 @@
-package com.cnkart.order.event;
+package com.cnkart.inventory.event;
 
-import com.cnkart.order.model.OutboxEvent;
-import com.cnkart.order.repository.OutboxEventRepository;
+import com.cnkart.inventory.model.OutboxEvent;
+import com.cnkart.inventory.repository.OutboxEventRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -16,7 +15,7 @@ import java.util.List;
 @Slf4j
 public class OutboxEventPoller {
 
-    private static final String TOPIC = "cnkart.order.events";
+    private static final String TOPIC = "cnkart.inventory.events";
 
     private final OutboxEventRepository outboxEventRepository;
     private final KafkaTemplate<String, String> kafkaTemplate;
@@ -41,7 +40,7 @@ public class OutboxEventPoller {
                     public void onSuccess(org.springframework.kafka.support.SendResult<String, String> result) {
                         event.setStatus("PUBLISHED");
                         outboxEventRepository.save(event);
-                        log.debug("Published outbox event {} for order {}", event.getId(), event.getAggregateId());
+                        log.debug("Published outbox event {} for inventory {}", event.getId(), event.getAggregateId());
                     }
 
                     @Override

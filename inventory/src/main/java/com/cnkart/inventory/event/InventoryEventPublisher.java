@@ -3,6 +3,7 @@ package com.cnkart.inventory.event;
 import com.cnkart.inventory.dto.InventoryReservationRequest;
 import com.cnkart.inventory.dto.InventoryReservationResponse;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.cnkart.inventory.repository.OutboxEventRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.core.KafkaTemplate;
@@ -15,7 +16,7 @@ public class InventoryEventPublisher {
 
     private static final String TOPIC = "cnkart.inventory.events";
 
-    private final KafkaTemplate<String, String> kafkaTemplate;
+    private final OutboxEventRepository outboxEventRepository;
     private final ObjectMapper objectMapper;
 
     public void publishInventoryReserved(InventoryReservationRequest request, InventoryReservationResponse response) {
@@ -42,9 +43,17 @@ public class InventoryEventPublisher {
 
     private void publish(Object event, String key) {
         try {
-            kafkaTemplate.send(TOPIC, key, objectMapper.writeValueAsString(event));
+            com.cnkart.inventory.model.OutboxEvent outboxEvent = com.cnkart.inventory.model.OutboxEvent.builder()
+                    .aggregateType("Inventory")
+                    .aggregateId(key)
+                    .eventType(event.getClass().getSimpleName())
+                    .payload(objectMapper.writeValueAsString(event))
+                    .status("PENDING")
+                    .createdAt(java.time.LocalDateTime.now())
+                    .build();
+            outboxEventRepository.save(outboxEvent);
         } catch (Exception exception) {
-            log.warn("Unable to publish inventory event {} for key {}: {}", event.getClass().getSimpleName(), key, exception.getMessage());
+            log.warn("Unable to save outbox event {} for key {}: {}", event.getClass().getSimpleName(), key, exception.getMessage());
         }
     }
 }
