@@ -36,8 +36,20 @@ class OrderServiceTest {
     @Mock
     private InventoryService inventoryService;
 
+    @Mock
+    private org.springframework.transaction.support.TransactionTemplate transactionTemplate;
+
     @InjectMocks
     private OrderService orderService;
+
+    @org.junit.jupiter.api.BeforeEach
+    void setUp() {
+        // Stub transactionTemplate to execute the callback synchronously
+        org.mockito.Mockito.lenient().when(transactionTemplate.execute(any())).thenAnswer(invocation -> {
+            org.springframework.transaction.support.TransactionCallback<?> callback = invocation.getArgument(0);
+            return callback.doInTransaction(new org.springframework.transaction.support.SimpleTransactionStatus());
+        });
+    }
 
     @Test
     void placeOrderConfirmsOrderWhenInventoryIsAvailable() {
