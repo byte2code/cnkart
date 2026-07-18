@@ -1,0 +1,23 @@
+server:
+  port: 8083
+
+spring:
+  application:
+    name: notification-service
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    consumer:
+      group-id: notification-group
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+  zipkin:
+    base-url: ${ZIPKIN_URL:http://localhost:9411}
+  sleuth:
+    sampler:
+      probability: 1.0
+
+eureka:
+  client:
+    service-url:
+      defaultZone: ${EUREKA_SERVER_URL:http://localhost:8761/eureka}
